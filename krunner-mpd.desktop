@@ -1,6 +1,7 @@
 [Desktop Entry]
 Name=MPD
-Comment=A KRunner module for controlling MPD
+Comment=Controls MPD
+Comment[de]=Steuert MPD
 X-KDE-ServiceTypes=Plasma/Runner
 Type=Service
 Icon=multimedia-player
