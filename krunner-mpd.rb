@@ -146,7 +146,20 @@ def do_next(_)
     $mpd.next
 end
 
+class String
+    def remove_spaced_prefix!(prefix)
+        if self.start_with?(prefix + ' ')
+            replace(self[prefix.length..-1].lstrip)
+            return true
+        else
+            return false
+        end
+    end
+end
+
 def find_media(title)
+    title.remove_spaced_prefix!('play')
+
     $mpd.where(title: title).sort { |x, y|
         xprio = (x.title == title)
         yprio = (y.title == title)
@@ -170,6 +183,9 @@ def found_media(file, _)
 end
 
 def find_in_playlist(title)
+    title.remove_spaced_prefix!('play')
+    title.remove_spaced_prefix!('jump to')
+
     $mpd.queue_where(title: title).sort { |x, y|
         xprio = (x.title == title)
         yprio = (y.title == title)
@@ -191,10 +207,9 @@ def found_in_playlist(id, _)
 end
 
 def find_queue(title)
-    if !title.start_with?('queue ')
+    if !title.remove_spaced_prefix!('queue') && !title.remove_spaced_prefix!('enqueue')
         return []
     end
-    title = title[5..-1].strip
 
     $mpd.where(title: title).sort { |x, y|
         xprio = (x.title == title)
@@ -218,10 +233,10 @@ def do_queue(file, _)
 end
 
 def find_queue_album(album)
-    if !album.start_with?('queue ')
+    if !album.remove_spaced_prefix!('queue') && !album.remove_spaced_prefix!('enqueue')
         return []
     end
-    album = album[5..-1].strip
+    album.remove_spaced_prefix!('album')
 
     result_hash = {}
     $mpd.where(album: album).each { |result|
@@ -246,11 +261,8 @@ def do_queue_album(album, _)
 end
 
 def lookup_artist_random_song(artist)
-    if artist.start_with?('anything by ')
-        artist = artist[11..-1].strip
-    elsif artist.start_with?('anything from ')
-        artist = artist[13..-1].strip
-    else
+    artist.remove_spaced_prefix!('play')
+    if !artist.remove_spaced_prefix!('anything by') && !artist.remove_spaced_prefix!('anything from')
         return []
     end
 
@@ -268,11 +280,8 @@ def lookup_artist_random_song(artist)
 end
 
 def lookup_album_random_song(album)
-    if album.start_with?('anything on ')
-        album = album[11..-1].strip
-    elsif album.start_with?('anything from ')
-        album = album[13..-1].strip
-    else
+    album.remove_spaced_prefix!('play')
+    if !album.remove_spaced_prefix!('anything on') && !album.remove_spaced_prefix!('anything from')
         return []
     end
 
