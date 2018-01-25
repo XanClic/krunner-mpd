@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 
 require 'dbus'
+require 'i18n'
+require 'locale'
 require 'ruby-mpd'
 
 
@@ -12,10 +14,21 @@ MATCH_HELPER = 70
 MATCH_COMPLETE = 100
 
 
+I18n.load_path << Dir['locales/*.yml']
+candidates = Locale.candidates.map { |c| c.to_s } + ['en']
+candidates.each do |c|
+    begin
+        I18n.locale = c
+        break
+    rescue
+    end
+end
+
+
 PLAY = {
     cmd: 'play',
     action: 'play',
-    description: 'Abspielen (fortsetzen)',
+    description: I18n.t('play_desc'),
     icon: 'media-playback-start',
     execute: :do_play,
 }
@@ -23,7 +36,7 @@ PLAY = {
 RESUME = {
     cmd: 'resume',
     action: 'resume',
-    description: 'Abspielen fortsetzen',
+    description: I18n.t('resume_desc'),
     icon: 'media-playback-start',
     execute: :do_resume,
 }
@@ -31,7 +44,7 @@ RESUME = {
 PAUSE = {
     cmd: 'pause',
     action: 'pause',
-    description: 'Abspielen pausieren',
+    description: I18n.t('pause_desc'),
     icon: 'media-playback-pause',
     execute: :do_pause,
 }
@@ -39,7 +52,7 @@ PAUSE = {
 PREV = {
     cmd: 'prev',
     action: 'prev',
-    description: 'Vorheriges Stück',
+    description: I18n.t('prev_desc'),
     icon: 'media-skip-backward',
     execute: :do_prev,
 }
@@ -47,7 +60,7 @@ PREV = {
 PREVIOUS = {
     cmd: 'previous',
     action: 'previous',
-    description: 'Vorheriges Stück',
+    description: I18n.t('prev_desc'),
     icon: 'media-skip-backward',
     execute: :do_prev,
 }
@@ -55,14 +68,14 @@ PREVIOUS = {
 NEXT = {
     cmd: 'next',
     action: 'next',
-    description: 'Nächstes Stück',
+    description: I18n.t('next_desc'),
     icon: 'media-skip-forward',
     execute: :do_next,
 }
 
 FIND_MEDIA = {
     cmd: nil,
-    description: '\s',
+    description: I18n.t('find_desc'),
     action_prefix: '!fm ',
     match: :find_media,
     execute: :found_media,
@@ -70,7 +83,7 @@ FIND_MEDIA = {
 
 FIND_IN_PLAYLIST = {
     cmd: nil,
-    description: 'Springe zu \s',
+    description: I18n.t('jump_desc'),
     action_prefix: '!fpl ',
     match: :find_in_playlist,
     execute: :found_in_playlist,
@@ -78,7 +91,7 @@ FIND_IN_PLAYLIST = {
 
 QUEUE = {
     cmd: nil,
-    description: 'Hänge \s an',
+    description: I18n.t('queue_desc'),
     action_prefix: '!q ',
     match: :find_queue,
     execute: :do_queue,
@@ -86,7 +99,7 @@ QUEUE = {
 
 QUEUE_ALBUM = {
     cmd: nil,
-    description: 'Hänge Album \al von \ar an',
+    description: I18n.t('queue_album_desc'),
     action_prefix: '!qal ',
     match: :find_queue_album,
     execute: :do_queue_album,
@@ -94,7 +107,7 @@ QUEUE_ALBUM = {
 
 RANDOM_BY_ARTIST = {
     cmd: nil,
-    description: 'Spiele irgendwas von \s',
+    description: I18n.t('random_by_artist_desc'),
     action_prefix: '!rar ',
     match: :lookup_artist_random_song,
     execute: :found_media,
@@ -102,7 +115,7 @@ RANDOM_BY_ARTIST = {
 
 RANDOM_BY_ALBUM = {
     cmd: nil,
-    description: 'Spiele irgendwas auf \s',
+    description: I18n.t('random_by_album_desc'),
     action_prefix: '!ral ',
     match: :lookup_album_random_song,
     execute: :found_media,

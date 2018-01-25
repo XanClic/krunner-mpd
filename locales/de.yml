@@ -1,0 +1,12 @@
+de:
+    play_desc: 'Wiedergabe (fortsetzen)'
+    resume_desc: 'Wiedergabe fortsetzen'
+    pause_desc: 'Wiedergabe pausieren'
+    prev_desc: 'Vorheriges Stück'
+    next_desc: 'Nächstes Stück'
+    find_desc: '\s'
+    jump_desc: 'Springe zu \s'
+    queue_desc: 'Hänge \s an'
+    queue_album_desc: 'Hänge Album \al von \ar an'
+    random_by_artist_desc: 'Spiele irgendwas von \s'
+    random_by_album_desc: 'Spiele irgendwas auf \s'
