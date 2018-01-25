@@ -47,6 +47,13 @@ Short feature list
 - `anything by` gives you a random song by some artist, `anything on` gives you
   a random song from a random album
 
+Oh, and by the way, even if you’re not on an English system, the commands are
+still the same.  That’s because I personally always hate guessing whatever the
+translator has come up with now (whereas the English terms are usually rather
+consistent), and secondly because “queue X” in German would be “hänge X an” –
+and I’d get crazy both as a developer and a user if I had to either use infix
+notation or come up with a hack to get around it (like “Anhängen von X”).
+
 
 Installation
 ============
