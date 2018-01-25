@@ -14,7 +14,7 @@ MATCH_HELPER = 70
 MATCH_COMPLETE = 100
 
 
-I18n.load_path << Dir['locales/*.yml']
+I18n.load_path << Dir[File.dirname(__FILE__) + '/locales/*.yml']
 candidates = Locale.candidates.map { |c| c.to_s } + ['en']
 candidates.each do |c|
     begin
