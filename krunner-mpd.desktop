@@ -1,0 +1,15 @@
+[Desktop Entry]
+Name=MPD
+Comment=A KRunner module for controlling MPD
+X-KDE-ServiceTypes=Plasma/Runner
+Type=Service
+Icon=multimedia-player
+X-KDE-PluginInfo-Author=Hanna Reitz
+X-KDE-PluginInfo-Email=hanna@xanclic.moe
+X-KDE-PluginInfo-Name=krunner-mpd
+X-KDE-PluginInfo-Version=0.1
+X-KDE-PluginInfo-License=GPLv3
+X-KDE-PluginInfo-EnabledByDefault=true
+X-Plasma-API=DBus
+X-Plasma-DBusRunner-Service=moe.xanclic.krunner-mpd
+X-Plasma-DBusRunner-Path=/krunner
