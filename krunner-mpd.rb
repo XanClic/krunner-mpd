@@ -25,6 +25,18 @@ candidates.each do |c|
 end
 
 
+args = ARGV.to_a
+
+host = args.shift
+host = host ? host : 'localhost'
+
+port = args.shift
+port = port ? Integer(port) : 6600
+
+$mpd = MPD.new(host, port)
+$mpd.connect
+
+
 PLAY = {
     cmd: 'play',
     action: 'play',
@@ -120,10 +132,6 @@ RANDOM_BY_ALBUM = {
     match: :lookup_album_random_song,
     execute: :found_media,
 }
-
-
-$mpd = MPD.new
-$mpd.connect
 
 
 def do_play(_)
