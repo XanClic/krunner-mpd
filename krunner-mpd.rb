@@ -328,7 +328,7 @@ class DBusInterface < DBus::Object
             end
             ACTIONS.each do |action|
                 if action[:match]
-                    result += send(action[:match], query)
+                    result += send(action[:match], query.dup)
                 end
             end
             return [result]
@@ -337,11 +337,11 @@ class DBusInterface < DBus::Object
         dbus_method :Run, 'in match:s, in signature:s' do |match, signature|
             ACTIONS.each do |action|
                 if match == action[:action] && action[:execute]
-                    send(action[:execute], signature)
+                    send(action[:execute], signature.dup)
                     return
                 end
                 if action[:action_prefix] && match.start_with?(action[:action_prefix]) && action[:execute]
-                    send(action[:execute], match[action[:action_prefix].length..-1], signature)
+                    send(action[:execute], match[action[:action_prefix].length..-1], signature.dup)
                     return
                 end
             end
