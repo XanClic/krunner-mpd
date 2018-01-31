@@ -10,3 +10,4 @@ en:
     queue_album_desc: 'Queue album \al by \ar'
     random_by_artist_desc: 'Play anything by \s'
     random_by_album_desc: 'Play anything on \s'
+    unknown_artist: 'Unknown artist'
