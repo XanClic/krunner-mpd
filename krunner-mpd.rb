@@ -320,18 +320,27 @@ class DBusInterface < DBus::Object
         end
 
         dbus_method :Match, 'in query:s, out return:a(sssida{sv})' do |query|
-            result = []
-            ACTIONS.each do |action|
-                if query == action[:cmd]
-                    result << [action[:action], action[:description], action[:icon], MATCH_COMPLETE, 1.0, {}]
+            begin
+                result = []
+                ACTIONS.each do |action|
+                    if query == action[:cmd]
+                        result << [action[:action], action[:description], action[:icon], MATCH_COMPLETE, 1.0, {}]
+                    end
                 end
-            end
-            ACTIONS.each do |action|
-                if action[:match]
-                    result += send(action[:match], query.dup)
+                ACTIONS.each do |action|
+                    if action[:match]
+                        result += send(action[:match], query.dup)
+                    end
                 end
+                return [result]
+            rescue Interrupt
+                throw
+            rescue Exception => e
+                $stderr.puts e.inspect
+                $stderr.puts e.backtrace
+                $stderr.puts
+                return [[]]
             end
-            return [result]
         end
 
         dbus_method :Run, 'in match:s, in signature:s' do |match, signature|
