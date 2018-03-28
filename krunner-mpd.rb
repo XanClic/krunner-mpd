@@ -262,7 +262,15 @@ end
 
 def do_queue_album(album, _)
     ids = $mpd.where({album: album}, {strict: true}).sort { |x, y|
-        x.track <=> y.track
+        if x.track && y.track
+            x.track <=> y.track
+        elsif x.track
+            -1
+        elsif y.track
+            1
+        else
+            0
+        end
     }.map { |song|
         $mpd.addid(song)
     }
