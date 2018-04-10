@@ -58,9 +58,15 @@ notation or come up with a hack to get around it (like “Anhängen von X”).
 Installation
 ============
 
-Copy the `plasma-runner-mpd.desktop` file where it needs to be
-(`/usr/share/kservices5` on my system), restart krunner, start
-`plasma-runner-mpd.rb`, and that should be it.
+The usual:
 
-For long-term usage, you probably want to add `krunner-mpd.rb` to your autostart
-list.
+    $ mkdir build
+    $ cd build
+    $ ../configure --prefix=$PREFIX
+    $ make
+    $ sudo make install
+
+This copies the plugin to `$PREFIX/bin`, the locale files to
+`$PREFIX/share/krunner-mpd/locales`, a .desktop file for krunner to the
+kservices directory, and a DBus .service file to `/usr/share/dbus-1/services`.
+After that, restart krunner and everything should work.
