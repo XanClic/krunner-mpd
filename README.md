@@ -58,9 +58,9 @@ notation or come up with a hack to get around it (like “Anhängen von X”).
 Installation
 ============
 
-Copy the `krunner-mpd.desktop` file where it needs to be
-(`/usr/share/kservices5` on my system), restart krunner, start `krunner-mpd.rb`,
-and that should be it.
+Copy the `plasma-runner-mpd.desktop` file where it needs to be
+(`/usr/share/kservices5` on my system), restart krunner, start
+`plasma-runner-mpd.rb`, and that should be it.
 
 For long-term usage, you probably want to add `krunner-mpd.rb` to your autostart
 list.
