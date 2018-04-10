@@ -34,7 +34,21 @@ port = args.shift
 port = port ? Integer(port) : 6600
 
 $mpd = MPD.new(host, port)
-$mpd.connect
+
+retry_count = 0
+while true
+    begin
+        $mpd.connect
+    rescue Errno::ECONNREFUSED => e
+        retry_count += 1
+        raise if retry_count == 10
+
+        sleep(1)
+        retry
+    else
+        break
+    end
+end
 
 
 PLAY = {
