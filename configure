@@ -11,6 +11,8 @@ end
 
 prefix = '/usr/local'
 dbus_services_path = '/usr/share/dbus-1/services'
+mpd_host = 'localhost'
+mpd_port = 6600
 
 begin
     kservices_path = `kf5-config --install services`.strip
@@ -28,6 +30,8 @@ DEFAULTS = {
     prefix: prefix,
     kservices_path: kservices_path,
     dbus_services_path: dbus_services_path,
+    mpd_host: mpd_host,
+    mpd_port: mpd_port,
 }
 
 def defaults_to(name)
@@ -63,6 +67,14 @@ ARGV.each do |arg|
         die("#{arg[0]} requires an argument") unless arg[1]
         dbus_services_path = arg[1]
 
+    when '--mpd-host'
+        die("#{arg[0]} requires an argument") unless arg[1]
+        mpd_host = arg[1]
+
+    when '--mpd-port'
+        die("#{arg[0]} requires an argument") unless arg[1]
+        mpd_port = Integer(arg[1])
+
     when '--help'
         puts('Supported options:')
         puts('  --prefix=<prefix>')
@@ -80,6 +92,14 @@ ARGV.each do |arg|
         puts('  --dbus-services-path=<path>')
         puts('      Defines that path to install the DBus .service file to.')
         puts("      #{defaults_to(:dbus_services_path)}")
+        puts
+        puts('  --mpd-host=<host>')
+        puts('      Defines the host the MPD server to be controlled runs on.')
+        puts("      #{defaults_to(:mpd_host)}")
+        puts
+        puts('  --mpd-port=<port>')
+        puts('      Defines the port the MPD server to be controlled runs on.')
+        puts("      #{defaults_to(:mpd_port)}")
         exit 0
 
     else
@@ -108,6 +128,8 @@ BUILD_DIR = #{build_dir}
 SOURCE_DIR = #{source_dir}
 KSERVICES_DIR = #{kservices_path}
 DBUS_SERVICES_DIR = #{dbus_services_path}
+MPD_HOST = #{mpd_host}
+MPD_PORT = #{mpd_port}
 
 .PHONY: all bundles clean install uninstall
 
@@ -130,7 +152,7 @@ $(BUILD_DIR)/krunner-mpd: $(SOURCE_DIR)/src/krunner-mpd.rb
 
 $(BUILD_DIR)/moe.xanclic.krunner-mpd.service: $(SOURCE_DIR)/src/moe.xanclic.krunner-mpd.service.template
 	cp "$<" "$@"
-	echo "Exec=$(PREFIX)/bin/krunner-mpd" >> "$@"
+	echo "Exec=\\"$(PREFIX)/bin/krunner-mpd\\" \\"$(MPD_HOST)\\"" \\"$(MPD_PORT)\\" >> "$@"
 
 $(BUILD_DIR)/locales:
 	mkdir -p "$@"
