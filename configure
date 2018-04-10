@@ -109,9 +109,11 @@ SOURCE_DIR = #{source_dir}
 KSERVICES_DIR = #{kservices_path}
 DBUS_SERVICES_DIR = #{dbus_services_path}
 
-.PHONY: all clean install uninstall
+.PHONY: all bundles clean install uninstall
 
-all: \\
+all: files bundles
+
+files: \\
     $(BUILD_DIR)/krunner-mpd \\
     #{locales.map { |l| "$(BUILD_DIR)/locales/#{l}.yml" } * " \\\n    " } \\
     $(BUILD_DIR)/plasma-runner-mpd.desktop \\
@@ -133,13 +135,16 @@ $(BUILD_DIR)/moe.xanclic.krunner-mpd.service: $(SOURCE_DIR)/src/moe.xanclic.krun
 $(BUILD_DIR)/locales:
 	mkdir -p "$@"
 
+bundles:
+	cd "$(SOURCE_DIR)" && bundler install
+
 clean:
 	rm -f "$(BUILD_DIR)/krunner-mpd"
 	rm -rf "$(BUILD_DIR)/locales"
 	rm -f "$(BUILD_DIR)/plasma-runner-mpd.desktop"
 	rm -f "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service"
 
-install: all
+install: files
 	install -d "$(ASSETS_DIR)/locales"
 	install -m 0644 #{locales.map { |l| "\"$(BUILD_DIR)/locales/#{l}.yml\"" } * ' '} "$(ASSETS_DIR)/locales/"
 	install "$(BUILD_DIR)/krunner-mpd" "$(PREFIX)/bin/"
