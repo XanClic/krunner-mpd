@@ -1,0 +1,133 @@
+#!/bin/ruby
+
+require 'shellwords'
+
+
+def die(msg)
+    $stderr.puts(msg)
+    exit 1
+end
+
+
+prefix = '/usr/local'
+begin
+    kservices_path = `kf5-config --install services`.strip
+    if kservices_path.empty?
+        kservices_path = nil
+    else
+        kservices_path = File.realpath(kservices_path)
+    end
+rescue
+    kservices_path = nil
+end
+
+
+DEFAULTS = {
+    prefix: prefix,
+    kservices_path: kservices_path,
+}
+
+def defaults_to(name)
+    if DEFAULTS[name]
+        "Defaults to '#{DEFAULTS[name]}'."
+    else
+        "Has no default, so this option is mandatory."
+    end
+end
+
+
+build_dir = Dir.pwd
+source_dir = File.realpath(File.dirname(__FILE__))
+
+ARGV.each do |arg|
+    if arg.start_with?('--')
+        arg = arg.split('=')
+        arg = [arg[0]] + [arg[1..-1] * '=']
+    else
+        arg = [arg]
+    end
+
+    case arg[0]
+    when '--prefix'
+        die("#{arg[0]} requires an argument") unless arg[1]
+        prefix = arg[1]
+
+    when '--kservices-path'
+        die("#{arg[0]} requires an argument") unless arg[1]
+        kservices_path = arg[1]
+
+    when '--help'
+        puts('Supported options:')
+        puts('  --prefix=<prefix>')
+        puts('      Defines the prefix to install to.  Note that the service description')
+        puts('      files have to be installed to specific locations and are unaffected by')
+        puts('      this.')
+        puts("      #{defaults_to(:prefix)}")
+        puts
+        puts('  --kservices-path=<path>')
+        puts('      Defines the path to install the .desktop file to.  This is usually the')
+        puts('      kservices directory that can be queried using')
+        puts("      'kf5-config --path services'.")
+        puts("      #{defaults_to(:kservices_path)}")
+        exit 0
+
+    else
+        die("Unknown parameter #{arg[0]}.  Try '--help' for more information.")
+    end
+end
+
+
+if !kservices_path
+    die('Failed to query kservices path, and --kservices-path was not given.')
+end
+
+
+locales = Dir.entries(source_dir + '/src/locales').select { |f|
+        f.end_with?('.yml') && f.shellescape == f
+    }.map { |f|
+        f.sub(/\.yml$/, '')
+    }
+
+
+File.open(build_dir + '/Makefile', 'w') do |makefile|
+    makefile.puts( <<EOF
+PREFIX = #{prefix}
+ASSETS_DIR = $(PREFIX)/share/krunner-mpd
+BUILD_DIR = #{build_dir}
+SOURCE_DIR = #{source_dir}
+KSERVICES_DIR = #{kservices_path}
+
+.PHONY: all clean install
+
+all: \\
+    $(BUILD_DIR)/krunner-mpd \\
+    #{locales.map { |l| "$(BUILD_DIR)/locales/#{l}.yml" } * " \\\n    " } \\
+    $(BUILD_DIR)/plasma-runner-mpd.desktop
+
+$(BUILD_DIR)/%: $(SOURCE_DIR)/src/%
+	cp "$<" "$@"
+
+$(BUILD_DIR)/locales/%: $(SOURCE_DIR)/src/locales/% $(BUILD_DIR)/locales
+	cp "$<" "$@"
+
+$(BUILD_DIR)/krunner-mpd: $(SOURCE_DIR)/src/krunner-mpd.rb
+	"$(SOURCE_DIR)/replace-assets-path.rb" "$(ASSETS_DIR)" < "$<" > "$@"
+
+$(BUILD_DIR)/locales:
+	mkdir -p "$@"
+
+clean:
+	rm -f "$(BUILD_DIR)/krunner-mpd"
+	rm -rf "$(BUILD_DIR)/locales"
+	rm -f "$(BUILD_DIR)/plasma-runner-mpd.desktop"
+
+install: all
+	install -d "$(ASSETS_DIR)/locales"
+	install -m 0644 #{locales.map { |l| "\"$(BUILD_DIR)/locales/#{l}.yml\"" } * ' '} "$(ASSETS_DIR)/locales/"
+	install "$(BUILD_DIR)/krunner-mpd" "$(PREFIX)/bin/"
+	install -m 0644 "$(BUILD_DIR)/plasma-runner-mpd.desktop" "$(KSERVICES_DIR)/"
+EOF
+    )
+end
+
+puts("Configure complete, run 'make' to build and 'make install' to install.")
