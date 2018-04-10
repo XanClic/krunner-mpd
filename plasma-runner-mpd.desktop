@@ -1,16 +1,25 @@
 [Desktop Entry]
 Name=MPD
+Type=Service
+X-DBUS-StartupType=Unique
+X-DBUS-ServiceName=moe.xanclic.krunner-mpd
+
 Comment=Controls MPD
 Comment[de]=Steuert MPD
-X-KDE-ServiceTypes=Plasma/Runner
-Type=Service
+
 Icon=multimedia-player
+
+X-KDE-ServiceTypes=Plasma/Runner
+X-KDE-StartupNotify=false
+X-KDE-Library=krunner_mpd
 X-KDE-PluginInfo-Author=Hanna Reitz
 X-KDE-PluginInfo-Email=hanna@xanclic.moe
 X-KDE-PluginInfo-Name=krunner-mpd
 X-KDE-PluginInfo-Version=0.1
 X-KDE-PluginInfo-License=GPLv3
 X-KDE-PluginInfo-EnabledByDefault=true
+X-KDE-PluginInfo-Website=https://github.com/XanClic/krunner-mpd
+
 X-Plasma-API=DBus
 X-Plasma-DBusRunner-Service=moe.xanclic.krunner-mpd
 X-Plasma-DBusRunner-Path=/krunner
