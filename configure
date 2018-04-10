@@ -10,6 +10,8 @@ end
 
 
 prefix = '/usr/local'
+dbus_services_path = '/usr/share/dbus-1/services'
+
 begin
     kservices_path = `kf5-config --install services`.strip
     if kservices_path.empty?
@@ -25,6 +27,7 @@ end
 DEFAULTS = {
     prefix: prefix,
     kservices_path: kservices_path,
+    dbus_services_path: dbus_services_path,
 }
 
 def defaults_to(name)
@@ -56,6 +59,10 @@ ARGV.each do |arg|
         die("#{arg[0]} requires an argument") unless arg[1]
         kservices_path = arg[1]
 
+    when '--dbus-services-path'
+        die("#{arg[0]} requires an argument") unless arg[1]
+        dbus_services_path = arg[1]
+
     when '--help'
         puts('Supported options:')
         puts('  --prefix=<prefix>')
@@ -69,6 +76,10 @@ ARGV.each do |arg|
         puts('      kservices directory that can be queried using')
         puts("      'kf5-config --path services'.")
         puts("      #{defaults_to(:kservices_path)}")
+        puts
+        puts('  --dbus-services-path=<path>')
+        puts('      Defines that path to install the DBus .service file to.')
+        puts("      #{defaults_to(:dbus_services_path)}")
         exit 0
 
     else
@@ -96,13 +107,15 @@ ASSETS_DIR = $(PREFIX)/share/krunner-mpd
 BUILD_DIR = #{build_dir}
 SOURCE_DIR = #{source_dir}
 KSERVICES_DIR = #{kservices_path}
+DBUS_SERVICES_DIR = #{dbus_services_path}
 
 .PHONY: all clean install
 
 all: \\
     $(BUILD_DIR)/krunner-mpd \\
     #{locales.map { |l| "$(BUILD_DIR)/locales/#{l}.yml" } * " \\\n    " } \\
-    $(BUILD_DIR)/plasma-runner-mpd.desktop
+    $(BUILD_DIR)/plasma-runner-mpd.desktop \\
+    $(BUILD_DIR)/moe.xanclic.krunner-mpd.service
 
 $(BUILD_DIR)/%: $(SOURCE_DIR)/src/%
 	cp "$<" "$@"
@@ -113,6 +126,10 @@ $(BUILD_DIR)/locales/%: $(SOURCE_DIR)/src/locales/% $(BUILD_DIR)/locales
 $(BUILD_DIR)/krunner-mpd: $(SOURCE_DIR)/src/krunner-mpd.rb
 	"$(SOURCE_DIR)/replace-assets-path.rb" "$(ASSETS_DIR)" < "$<" > "$@"
 
+$(BUILD_DIR)/moe.xanclic.krunner-mpd.service: $(SOURCE_DIR)/src/moe.xanclic.krunner-mpd.service.template
+	cp "$<" "$@"
+	echo "Exec=$(PREFIX)/bin/krunner-mpd" >> "$@"
+
 $(BUILD_DIR)/locales:
 	mkdir -p "$@"
 
@@ -120,12 +137,14 @@ clean:
 	rm -f "$(BUILD_DIR)/krunner-mpd"
 	rm -rf "$(BUILD_DIR)/locales"
 	rm -f "$(BUILD_DIR)/plasma-runner-mpd.desktop"
+	rm -f "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service"
 
 install: all
 	install -d "$(ASSETS_DIR)/locales"
 	install -m 0644 #{locales.map { |l| "\"$(BUILD_DIR)/locales/#{l}.yml\"" } * ' '} "$(ASSETS_DIR)/locales/"
 	install "$(BUILD_DIR)/krunner-mpd" "$(PREFIX)/bin/"
 	install -m 0644 "$(BUILD_DIR)/plasma-runner-mpd.desktop" "$(KSERVICES_DIR)/"
+	install -m 0644 "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service" "$(DBUS_SERVICES_DIR)/"
 EOF
     )
 end
