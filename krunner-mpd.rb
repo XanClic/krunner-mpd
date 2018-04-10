@@ -51,6 +51,11 @@ while true
 end
 
 
+if fork
+    exit 0
+end
+
+
 PLAY = {
     cmd: 'play',
     action: 'play',
