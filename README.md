@@ -69,4 +69,5 @@ The usual:
 This copies the plugin to `$PREFIX/bin`, the locale files to
 `$PREFIX/share/krunner-mpd/locales`, a .desktop file for krunner to the
 kservices directory, and a DBus .service file to `/usr/share/dbus-1/services`.
-After that, restart krunner and everything should work.
+After that, restart krunner and everything should work (though maybe you need to
+enable the plugin in the krunner settings).
