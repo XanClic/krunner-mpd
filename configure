@@ -109,7 +109,7 @@ SOURCE_DIR = #{source_dir}
 KSERVICES_DIR = #{kservices_path}
 DBUS_SERVICES_DIR = #{dbus_services_path}
 
-.PHONY: all clean install
+.PHONY: all clean install uninstall
 
 all: \\
     $(BUILD_DIR)/krunner-mpd \\
@@ -145,6 +145,12 @@ install: all
 	install "$(BUILD_DIR)/krunner-mpd" "$(PREFIX)/bin/"
 	install -m 0644 "$(BUILD_DIR)/plasma-runner-mpd.desktop" "$(KSERVICES_DIR)/"
 	install -m 0644 "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service" "$(DBUS_SERVICES_DIR)/"
+
+uninstall:
+	rm -f "$(PREFIX)/bin/krunner-mpd"
+	rm -rf "$(ASSETS_DIR)"
+	rm -f "$(KSERVICES_DIR)/plasma-runner-mpd.desktop"
+	rm -f "$(DBUS_SERVICES_DIR)/moe.xanclic.krunner-mpd.service"
 EOF
     )
 end
