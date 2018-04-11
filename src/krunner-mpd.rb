@@ -10,6 +10,10 @@ require 'ruby-mpd'
 ASSETS_PATH = File.dirname(__FILE__)
 
 
+PID_DIR = ENV['XDG_RUNTIME_DIR'] ? ENV['XDG_RUNTIME_DIR'] : "/var/run/user/#{Process::UID.eid}"
+PID_FILE = "#{PID_DIR}/krunner-mpd.pid"
+
+
 MATCH_NONE = 0
 MATCH_COMPLETION = 10
 MATCH_POSSIBLE = 30
@@ -55,7 +59,15 @@ while true
 end
 
 
-if fork
+child_pid = fork
+if child_pid
+    begin
+        File.write(PID_FILE, child_pid.to_s)
+    rescue Exception => e
+        $stderr.puts('Warning: Failed to write PID file:')
+        $stderr.puts(e.message)
+    end
+
     exit 0
 end
 
