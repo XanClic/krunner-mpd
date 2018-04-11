@@ -182,4 +182,4 @@ EOF
     )
 end
 
-puts("Configure complete, run 'make' to build and 'make install' to install.")
+puts("Configure complete, run 'make' to build and '[sudo] make install' to install.")
