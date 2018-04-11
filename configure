@@ -49,7 +49,9 @@ source_dir = File.realpath(File.dirname(__FILE__))
 ARGV.each do |arg|
     if arg.start_with?('--')
         arg = arg.split('=')
-        arg = [arg[0]] + [arg[1..-1] * '=']
+        if arg.length > 1
+            arg = [arg[0]] + [arg[1..-1] * '=']
+        end
     else
         arg = [arg]
     end
