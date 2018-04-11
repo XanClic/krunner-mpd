@@ -7,6 +7,11 @@ require 'ruby-mpd'
 require 'yaml'
 
 
+# --------------------------------------------------------------------
+# Global constants
+# --------------------------------------------------------------------
+
+
 # Replaced by make (using the replace-assets-path.rb script)
 ASSETS_PATH = File.dirname(__FILE__)
 
@@ -25,6 +30,11 @@ MATCH_HELPER = 70
 MATCH_COMPLETE = 100
 
 
+# --------------------------------------------------------------------
+# Load i18n files
+# --------------------------------------------------------------------
+
+
 I18n.load_path << Dir[ASSETS_PATH + '/locales/*.yml']
 candidates = Locale.candidates.map { |c| c.to_s } + ['en']
 candidates.each do |c|
@@ -34,6 +44,11 @@ candidates.each do |c|
     rescue
     end
 end
+
+
+# --------------------------------------------------------------------
+# Fetch parameters from the config file and the command line
+# --------------------------------------------------------------------
 
 
 # Lowest proprity: Built-in defaults
@@ -69,6 +84,11 @@ arg_port = args.shift
 port = Integer(arg_port) if arg_port
 
 
+# --------------------------------------------------------------------
+# Connect to MPD
+# --------------------------------------------------------------------
+
+
 $mpd = MPD.new(host, port)
 
 retry_count = 0
@@ -87,6 +107,11 @@ while true
 end
 
 
+# --------------------------------------------------------------------
+# Fork off the main process and write a PID file
+# --------------------------------------------------------------------
+
+
 child_pid = fork
 if child_pid
     begin
@@ -98,6 +123,12 @@ if child_pid
 
     exit 0
 end
+
+
+# --------------------------------------------------------------------
+# Ensure the PID file is cleaned up on exit
+# --------------------------------------------------------------------
+
 
 # Perform a normal exit when a termination signal is received...
 ['HUP', 'INT', 'TERM', 'USR1', 'USR2', 'ALRM', 'PIPE', 'POLL', 'PROF'].each do |signal|
@@ -114,6 +145,74 @@ at_exit do
     end
 end
 
+
+# --------------------------------------------------------------------
+# This ends the main part of the initialization.  We still need to set
+# up the DBus interface and enter the main loop, both of which is done
+# at the bottom of this file.
+# --------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------
+# The actions that can be performed with this runner
+# --------------------------------------------------------------------
+
+# Structure of an action definition:
+#   cmd:            Either a simple string that is the cmd the user
+#                   can use through krunner to launch this action; or
+#                   nil, in which case there must be a :match key.
+#
+#   action:         If :cmd is set, this specifies how the action
+#                   should be identified to krunner.  (So this is just
+#                   some ID string.)
+#                   Without :cmd set, you probably want to use
+#                   :action_prefix instead.
+#
+#   description:    The action description.  This is what the user
+#                   sees in the krunner action list.  This is only
+#                   necessary for actions with a :cmd key, though
+#                   others may make internal use of it as well.  They
+#                   will usually do some processing on it before
+#                   the :match function returns the real description,
+#                   though (like replace "\s" by a song name).
+#
+#   icon:           The icon to display in the action list.  Again,
+#                   only strictly necessary for actions with :cmd set,
+#                   but others may make internal ue of it.
+#
+#   execute:        Name of the function to execute once the action
+#                   should be run.
+#                   If :action is set, that function takes one
+#                   argument, which is the krunner action ID.
+#                   (krunner actions are different from these actions
+#                    here.  A runner can implement multiple actions
+#                    for a single match, and then the user will see
+#                    little buttons next to the match and can thus
+#                    choose between different actions.  This plugin
+#                    does not make use of that yet.)
+#                   If :action_prefix is set, that function takes two
+#                   arguments.  The first one is the action ID without
+#                   the prefix, the second one is the krunner aciton
+#                   ID.
+#
+#   action_prefix:  If :action is not set, this specifies a common
+#                   prefix that all action IDs returned by this
+#                   action's :match function share.
+#
+#   match:          If :cmd is not set, this allows specifying a
+#                   custom matching function.  That function receives
+#                   the whole user input string and is supposed to
+#                   return exactly the object that is returned to
+#                   krunner via DBus.  This object is an array with
+#                   the following entries:
+#                   [0]: action ID (must be prefixed by
+#                                   :action_prefix)
+#                   [1]: description string
+#                   [2]: icon name
+#                   [3]: match type (MATCH_* constants)
+#                   [4]: match relevance (in [0.0, 1.0])
+#                   [5]: "properties" object (I don't know, something
+#                        with keys "urls", "category", and "subtext")
 
 PLAY = {
     cmd: 'play',
@@ -210,6 +309,11 @@ RANDOM_BY_ALBUM = {
     match: :lookup_album_random_song,
     execute: :found_media,
 }
+
+
+# --------------------------------------------------------------------
+# Implementation of the above actions
+# --------------------------------------------------------------------
 
 
 def do_play(_)
@@ -394,8 +498,18 @@ def lookup_album_random_song(album)
 end
 
 
+# --------------------------------------------------------------------
+# End of the action implementation: List of all actions
+# --------------------------------------------------------------------
+
+
 ACTIONS = [PLAY, PAUSE, RESUME, PREV, PREVIOUS, NEXT,
            FIND_IN_PLAYLIST, FIND_MEDIA, QUEUE, QUEUE_ALBUM, RANDOM_BY_ARTIST, RANDOM_BY_ALBUM]
+
+
+# --------------------------------------------------------------------
+# DBus interface to krunner
+# --------------------------------------------------------------------
 
 
 class DBusInterface < DBus::Object
@@ -444,6 +558,13 @@ class DBusInterface < DBus::Object
         end
     end
 end
+
+
+# --------------------------------------------------------------------
+# Continuation of top-level code: Create the DBus interface and enter
+# the main loop
+# --------------------------------------------------------------------
+
 
 dbus = DBus.session_bus
 service = dbus.request_service('moe.xanclic.krunner-mpd')
