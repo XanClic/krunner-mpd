@@ -71,6 +71,21 @@ if child_pid
     exit 0
 end
 
+# Perform a normal exit when a termination signal is received...
+['HUP', 'INT', 'TERM', 'USR1', 'USR2', 'ALRM', 'PIPE', 'POLL', 'PROF'].each do |signal|
+    Signal.trap(signal) do
+        exit 0
+    end
+end
+
+# ...so that the PID file is cleaned up.
+at_exit do
+    begin
+        File.delete(PID_FILE)
+    rescue Exception => e
+    end
+end
+
 
 PLAY = {
     cmd: 'play',
