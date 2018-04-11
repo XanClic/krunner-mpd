@@ -4,10 +4,13 @@ require 'dbus'
 require 'i18n'
 require 'locale'
 require 'ruby-mpd'
+require 'yaml'
 
 
 # Replaced by make (using the replace-assets-path.rb script)
 ASSETS_PATH = File.dirname(__FILE__)
+
+CONFIG_FILE = ENV['HOME'] + '/.config/krunner-mpd/config.yaml'
 
 
 PID_DIR = ENV['XDG_RUNTIME_DIR'] ? ENV['XDG_RUNTIME_DIR'] : "/var/run/user/#{Process::UID.eid}"
@@ -33,13 +36,38 @@ candidates.each do |c|
 end
 
 
+# Lowest proprity: Built-in defaults
+host = 'localhost'
+port = 6600
+
+
+# Middle priority: Config file
+begin
+    config_file = File.open(CONFIG_FILE)
+rescue Exception => e
+    config = nil
+else
+    config = YAML.load(config_file)
+end
+
+
+if config
+    if config['mpd']
+        host = String(config['mpd']['host']) if config['mpd']['host']
+        port = Integer(config['mpd']['port']) if config['mpd']['port']
+    end
+end
+
+
+# Highest priority: Command-line arguments
 args = ARGV.to_a
 
-host = args.shift
-host = host ? host : 'localhost'
+arg_host = args.shift
+host = arg_host if arg_host
 
-port = args.shift
-port = port ? Integer(port) : 6600
+arg_port = args.shift
+port = Integer(arg_port) if arg_port
+
 
 $mpd = MPD.new(host, port)
 
