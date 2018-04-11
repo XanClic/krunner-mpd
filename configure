@@ -14,6 +14,8 @@ dbus_services_path = '/usr/share/dbus-1/services'
 mpd_host = 'localhost'
 mpd_port = 6600
 
+skip_bundle_install = false
+
 begin
     kservices_path = `kf5-config --install services`.strip
     if kservices_path.empty?
@@ -77,6 +79,10 @@ ARGV.each do |arg|
         die("#{arg[0]} requires an argument") unless arg[1]
         mpd_port = Integer(arg[1])
 
+    when '--skip-bundle-install'
+        die("#{arg[0]} does not take an argument") if arg[1]
+        skip_bundle_install = true
+
     when '--help'
         puts('Supported options:')
         puts('  --prefix=<prefix>')
@@ -102,6 +108,10 @@ ARGV.each do |arg|
         puts('  --mpd-port=<port>')
         puts('      Defines the port the MPD server to be controlled runs on.')
         puts("      #{defaults_to(:mpd_port)}")
+        puts
+        puts('  --skip-bundle-install')
+        puts("      Skips 'bundle install' during 'make'.  When specifying this option, it is")
+        puts('      your responsibility to ensure that all the necessary gems are installed.')
         exit 0
 
     else
@@ -133,9 +143,9 @@ DBUS_SERVICES_DIR = #{dbus_services_path}
 MPD_HOST = #{mpd_host}
 MPD_PORT = #{mpd_port}
 
-.PHONY: all bundles clean install uninstall
+.PHONY: all clean install uninstall #{skip_bundle_install ? '# ' : ''}bundles
 
-all: files bundles
+all: files #{skip_bundle_install ? '# ' : ''}bundles
 
 files: \\
     $(BUILD_DIR)/krunner-mpd \\
@@ -159,8 +169,8 @@ $(BUILD_DIR)/moe.xanclic.krunner-mpd.service: $(SOURCE_DIR)/src/moe.xanclic.krun
 $(BUILD_DIR)/locales:
 	mkdir -p "$@"
 
-bundles:
-	cd "$(SOURCE_DIR)" && bundler install
+#{skip_bundle_install ? '# ' : ''}bundles:
+#{skip_bundle_install ? '# ' : ''}	cd "$(SOURCE_DIR)" && bundler install
 
 clean:
 	rm -f "$(BUILD_DIR)/krunner-mpd"
