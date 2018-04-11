@@ -470,7 +470,7 @@ def find_queue_album(album)
     result_hash.keys.sort.map { |real_album|
         artist = result_hash[real_album]
         artist = I18n.t(:unknown_artist) unless artist
-        prob = (real_album == album) ? 1.0 : 0.8
+        prob = (real_album == album) ? 0.95 : 0.75
         [QUEUE_ALBUM[:action_prefix] + real_album, QUEUE_ALBUM[:description].sub('\al', real_album).sub('\ar', artist), 'folder', MATCH_COMPLETION, prob, {}]
     }[0..9]
 end
