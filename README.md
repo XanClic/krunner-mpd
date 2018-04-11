@@ -76,7 +76,7 @@ enable the plugin in the krunner settings).
 Configuration
 =============
 
-You can place a configuration file into `~/.config/krunner-mpd/config.yaml`.
+You can place a configuration file under `~/.config/krunner-mpd/config.yaml`.
 Here is an example:
 
     # Options for how to talk to the MPD instance
