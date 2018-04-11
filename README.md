@@ -71,3 +71,15 @@ This copies the plugin to `$PREFIX/bin`, the locale files to
 kservices directory, and a DBus .service file to `/usr/share/dbus-1/services`.
 After that, restart krunner and everything should work (though maybe you need to
 enable the plugin in the krunner settings).
+
+
+Configuration
+=============
+
+You can place a configuration file into `~/.config/krunner-mpd/config.yaml`.
+Here is an example:
+
+    # Options for how to talk to the MPD instance
+    mpd:
+        host: localhost     # MPD host address
+        port: 6600          # The port MPD listens on
