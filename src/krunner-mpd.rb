@@ -362,7 +362,18 @@ def find_media(title)
         end
     }.map { |result|
         prob = (result.title == title) ? 0.5 : 0.3
-        [FIND_MEDIA[:action_prefix] + result.file, FIND_MEDIA[:description].sub('\s', "#{result.artist} (#{result.album}): #{result.title}"), 'media-playback-start', MATCH_POSSIBLE, prob, {}]
+
+        if result.artist && result.album
+            song = "#{result.artist} (#{result.album}): #{result.title}"
+        elsif result.artist
+            song = "#{result.artist}: #{result.title}"
+        elsif result.album
+            song = "#{result.album}: #{result.title}"
+        else
+            song = result.title
+        end
+
+        [FIND_MEDIA[:action_prefix] + result.file, FIND_MEDIA[:description].sub('\s', song), 'media-playback-start', MATCH_POSSIBLE, prob, {}]
     }[0..9]
 end
 
@@ -388,7 +399,18 @@ def find_in_playlist(title)
         end
     }.map { |result|
         prob = (result.title == title) ? 0.9 : 0.7
-        [FIND_IN_PLAYLIST[:action_prefix] + result.id.to_s, FIND_IN_PLAYLIST[:description].sub('\s', "#{result.artist} (#{result.album}): #{result.title}"), 'media-playback-start', MATCH_POSSIBLE, prob, {}]
+
+        if result.artist && result.album
+            song = "#{result.artist} (#{result.album}): #{result.title}"
+        elsif result.artist
+            song = "#{result.artist}: #{result.title}"
+        elsif result.album
+            song = "#{result.album}: #{result.title}"
+        else
+            song = result.title
+        end
+
+        [FIND_IN_PLAYLIST[:action_prefix] + result.id.to_s, FIND_IN_PLAYLIST[:description].sub('\s', song), 'media-playback-start', MATCH_POSSIBLE, prob, {}]
     }[0..9]
 end
 
@@ -413,7 +435,18 @@ def find_queue(title)
         end
     }.map { |result|
         prob = (result.title == title) ? 1.0 : 0.8
-        [QUEUE[:action_prefix] + result.file, QUEUE[:description].sub('\s', "#{result.artist} (#{result.album}): #{result.title}"), 'media-playback-start', MATCH_COMPLETION, prob, {}]
+
+        if result.artist && result.album
+            song = "#{result.artist} (#{result.album}): #{result.title}"
+        elsif result.artist
+            song = "#{result.artist}: #{result.title}"
+        elsif result.album
+            song = "#{result.album}: #{result.title}"
+        else
+            song = result.title
+        end
+
+        [QUEUE[:action_prefix] + result.file, QUEUE[:description].sub('\s', song), 'media-playback-start', MATCH_COMPLETION, prob, {}]
     }[0..9]
 end
 
