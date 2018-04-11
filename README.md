@@ -2,14 +2,14 @@ Long description
 ================
 
 First I was sad that KDE 5 ripped out a lot of the Amarok krunner integration.
-Then I was sad that (under Arch Linux) everything that was left seemed to have
+Then I was sad that (under Arch Linux) even the pitiable rest seemed to have
 disappeared as well.
 
 On my quest to find out how to restore it I noticed that apparently nobody cares
 for Amarok anymore (;\_;7), so I looked for other music players that might be
 well integrated into KDE again.  First I tried Babe, well, I didn’t like the
 name and more importantly it crashed when it tried to load my library.  Maybe
-the \u0000 in one of the file tags hat something to do with it...  Who cares.
+the \u0000 in one of the file tags had something to do with it...  Who cares.
 
 So I went on, to Cantata with MPD.  That seemed to work, even though change
 always bites you in the behind somehow (in this case among other things the
