@@ -167,17 +167,20 @@ clean:
 	rm -f "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service"
 
 install: files
-	install -d "$(ASSETS_DIR)/locales"
-	install -m 0644 #{locales.map { |l| "\"$(BUILD_DIR)/locales/#{l}.yml\"" } * ' '} "$(ASSETS_DIR)/locales/"
-	install "$(BUILD_DIR)/krunner-mpd" "$(PREFIX)/bin/"
-	install -m 0644 "$(BUILD_DIR)/plasma-runner-mpd.desktop" "$(KSERVICES_DIR)/"
-	install -m 0644 "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service" "$(DBUS_SERVICES_DIR)/"
+	install -d "$(DESTDIR)$(ASSETS_DIR)/locales"
+	install -d "$(DESTDIR)$(PREFIX)/bin"
+	install -d "$(DESTDIR)$(KSERVICES_DIR)"
+	install -d "$(DESTDIR)$(DBUS_SERVICES_DIR)"
+	install -m 0644 #{locales.map { |l| "\"$(BUILD_DIR)/locales/#{l}.yml\"" } * ' '} "$(DESTDIR)$(ASSETS_DIR)/locales/"
+	install "$(BUILD_DIR)/krunner-mpd" "$(DESTDIR)$(PREFIX)/bin/"
+	install -m 0644 "$(BUILD_DIR)/plasma-runner-mpd.desktop" "$(DESTDIR)$(KSERVICES_DIR)/"
+	install -m 0644 "$(BUILD_DIR)/moe.xanclic.krunner-mpd.service" "$(DESTDIR)$(DBUS_SERVICES_DIR)/"
 
 uninstall:
-	rm -f "$(PREFIX)/bin/krunner-mpd"
-	rm -rf "$(ASSETS_DIR)"
-	rm -f "$(KSERVICES_DIR)/plasma-runner-mpd.desktop"
-	rm -f "$(DBUS_SERVICES_DIR)/moe.xanclic.krunner-mpd.service"
+	rm -f "$(DESTDIR)$(PREFIX)/bin/krunner-mpd"
+	rm -rf "$(DESTDIR)$(ASSETS_DIR)"
+	rm -f "$(DESTDIR)$(KSERVICES_DIR)/plasma-runner-mpd.desktop"
+	rm -f "$(DESTDIR)$(DBUS_SERVICES_DIR)/moe.xanclic.krunner-mpd.service"
 EOF
     )
 end
