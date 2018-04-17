@@ -81,5 +81,13 @@ Here is an example:
 
     # Options for how to talk to the MPD instance
     mpd:
-        host: localhost     # MPD host address
-        port: 6600          # The port MPD listens on
+        host: localhost     # MPD host address (default: localhost)
+        port: 6600          # The port MPD listens on (default: 6600)
+
+    # Options for help with debugging
+    debug:
+        log_file: /tmp/log  # Log file (default: stderr)
+        log_truncate: false # Whether to truncate the log file on every launch
+                            # (default: true)
+        log_level: Debug    # Minimum level of messages to log
+                            # (Debug, Info, Warning (default), Error, Critical)
