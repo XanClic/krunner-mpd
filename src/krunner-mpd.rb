@@ -222,7 +222,7 @@ end
 
 
 # Perform a normal exit when a termination signal is received...
-['HUP', 'INT', 'TERM', 'USR1', 'USR2', 'ALRM', 'PIPE', 'POLL', 'PROF'].each do |signal|
+['HUP', 'INT', 'TERM', 'USR1', 'USR2', 'ALRM', 'POLL', 'PROF'].each do |signal|
     Signal.trap(signal) do
         log(LOG_INFO, "Received SIG#{signal}")
         exit 0
@@ -238,6 +238,11 @@ at_exit do
         $log_file.close
     rescue Exception => e
     end
+end
+
+# Ignore SIGPIPE
+Signal.trap('PIPE') do
+    log(LOG_DEBUG, 'Received SIGPIPE')
 end
 
 
