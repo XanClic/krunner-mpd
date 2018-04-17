@@ -31,6 +31,43 @@ MATCH_COMPLETE = 100
 
 
 # --------------------------------------------------------------------
+# Important general functions
+# --------------------------------------------------------------------
+
+
+LOG_DEBUG       = 0
+LOG_INFO        = 1
+LOG_WARNING     = 2
+LOG_ERROR       = 3
+LOG_CRITICAL    = 4
+
+LOG_LEVEL_STRING = {
+    LOG_DEBUG       => 'Debug',
+    LOG_INFO        => 'Info',
+    LOG_WARNING     => 'Warning',
+    LOG_ERROR       => 'Error',
+    LOG_CRITICAL    => 'Critical',
+}
+
+def log(log_level, message)
+    time = Time.now.inspect
+    lines = message.split($/).map { |line|
+        "[#{time}] #{LOG_LEVEL_STRING[log_level]}: #{line}"
+    }
+
+    if log_level >= $log_level
+        $log_file.puts(lines * $/)
+    end
+end
+
+def die(message)
+    $log_level = 0
+    log(LOG_CRITICAL, message)
+    exit 1
+end
+
+
+# --------------------------------------------------------------------
 # Load i18n files
 # --------------------------------------------------------------------
 
@@ -55,6 +92,11 @@ end
 host = 'localhost'
 port = 6600
 
+log_filename = nil
+$log_file = $stderr
+log_truncate = true
+$log_level = LOG_WARNING
+
 
 # Middle priority: Config file
 begin
@@ -71,6 +113,26 @@ if config
         host = String(config['mpd']['host']) if config['mpd']['host']
         port = Integer(config['mpd']['port']) if config['mpd']['port']
     end
+
+    if config['debug']
+        log_filename = String(config['debug']['log_file']) if config['debug']['log_file'] != nil
+        log_truncate = config['debug']['log_truncate'] if config['debug']['log_truncate'] != nil
+        if ![true, false].include?(log_truncate)
+            die('log_truncate must be true or false')
+        end
+
+        $log_level = nil
+        log_level_string = String(config['debug']['log_level']) if config['debug']['log_level'] != nil
+        LOG_LEVEL_STRING.each do |num, str|
+            if str.casecmp(log_level_string) == 0
+                $log_level = num
+                break
+            end
+        end
+        if !$log_level
+            die("Invalid log level “#{log_level_string}”")
+        end
+    end
 end
 
 
@@ -82,6 +144,16 @@ host = arg_host if arg_host
 
 arg_port = args.shift
 port = Integer(arg_port) if arg_port
+
+
+# --------------------------------------------------------------------
+# Initiate debugging
+# --------------------------------------------------------------------
+
+
+if log_filename
+    $log_file = File.open(log_filename, log_truncate ? 'w' : 'a')
+end
 
 
 # --------------------------------------------------------------------
@@ -117,8 +189,8 @@ if child_pid
     begin
         File.write(PID_FILE, child_pid.to_s)
     rescue Exception => e
-        $stderr.puts('Warning: Failed to write PID file:')
-        $stderr.puts(e.message)
+        log(LOG_WARNING, 'Failed to write PID file:')
+        log(LOG_WARNING, e.message)
     end
 
     exit 0
@@ -548,7 +620,8 @@ ACTIONS = [PLAY, PAUSE, RESUME, PREV, PREVIOUS, NEXT,
 class DBusInterface < DBus::Object
     dbus_interface 'org.kde.krunner1' do
         dbus_method :Actions, 'in msg:v, out return:a(sss)' do |msg|
-            p msg
+            log(LOG_DEBUG, ':Actions method called:')
+            log(LOG_DEBUG, msg.inspect)
             #return [ACTIONS.map { |action| [action[:action], action[:description], action[:icon]] }]
             return [[]]
         end
@@ -570,9 +643,8 @@ class DBusInterface < DBus::Object
             rescue Interrupt
                 throw
             rescue Exception => e
-                $stderr.puts e.inspect
-                $stderr.puts e.backtrace
-                $stderr.puts
+                log(LOG_ERROR, 'Exception while matching: ' + e.inspect)
+                log(LOG_ERROR, e.backtrace * $/)
                 return [[]]
             end
         end
