@@ -110,8 +110,8 @@ end
 
 if config
     if config['mpd']
-        host = String(config['mpd']['host']) if config['mpd']['host']
-        port = Integer(config['mpd']['port']) if config['mpd']['port']
+        host = String(config['mpd']['host']) if config['mpd']['host'] != nil
+        port = Integer(config['mpd']['port']) if config['mpd']['port'] != nil
     end
 
     if config['debug']
