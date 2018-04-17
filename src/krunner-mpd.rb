@@ -70,6 +70,15 @@ def die(message)
 end
 
 
+def format_host_port(host, port)
+    if host.include?(':')
+        "[#{host}]:#{port}"
+    else
+        "#{host}:#{port}"
+    end
+end
+
+
 # --------------------------------------------------------------------
 # Load i18n files
 # --------------------------------------------------------------------
@@ -158,6 +167,8 @@ if log_filename
     $log_file = File.open(log_filename, log_truncate ? 'w' : 'a')
 end
 
+log(LOG_INFO, '--- Commencing log ---')
+
 
 # --------------------------------------------------------------------
 # Connect to MPD
@@ -182,6 +193,9 @@ while true
 end
 
 
+log(LOG_INFO, "Connected to MPD on #{format_host_port(host, port)}")
+
+
 # --------------------------------------------------------------------
 # Fork off the main process and write a PID file
 # --------------------------------------------------------------------
@@ -196,6 +210,8 @@ if child_pid
         log(LOG_WARNING, e.message)
     end
 
+    log(LOG_INFO, "Forked child (PID #{child_pid}), parent exiting")
+
     exit 0
 end
 
@@ -208,14 +224,18 @@ end
 # Perform a normal exit when a termination signal is received...
 ['HUP', 'INT', 'TERM', 'USR1', 'USR2', 'ALRM', 'PIPE', 'POLL', 'PROF'].each do |signal|
     Signal.trap(signal) do
+        log(LOG_INFO, "Received SIG#{signal}")
         exit 0
     end
 end
 
-# ...so that the PID file is cleaned up.
+# ...so that the PID file is cleaned up.  (Among other things.)
 at_exit do
     begin
         File.delete(PID_FILE)
+
+        log(LOG_INFO, 'Exiting')
+        $log_file.close
     rescue Exception => e
     end
 end
@@ -392,22 +412,32 @@ RANDOM_BY_ALBUM = {
 
 
 def do_play(_)
+    log(LOG_DEBUG, 'Function: do_play()')
+    log(LOG_DEBUG, 'MPD request: play()')
     $mpd.play
 end
 
 def do_pause(_)
+    log(LOG_DEBUG, 'Function: do_pause()')
+    log(LOG_DEBUG, 'MPD request: pause = true')
     $mpd.pause = true
 end
 
 def do_resume(_)
+    log(LOG_DEBUG, 'Function: do_resume()')
+    log(LOG_DEBUG, 'MPD request: pause = false')
     $mpd.pause = false
 end
 
 def do_prev(_)
+    log(LOG_DEBUG, 'Function: do_prev()')
+    log(LOG_DEBUG, 'MPD request: previous()')
     $mpd.previous
 end
 
 def do_next(_)
+    log(LOG_DEBUG, 'Function: do_next()')
+    log(LOG_DEBUG, 'MPD request: next()')
     $mpd.next
 end
 
@@ -425,7 +455,13 @@ end
 def find_media(title)
     title.remove_spaced_prefix!('play')
 
-    $mpd.where(title: title).sort { |x, y|
+    log(LOG_DEBUG, "Function: find_media(#{title.inspect})")
+
+    log(LOG_DEBUG, "MPD request: where(title: #{title.inspect})")
+    result = $mpd.where(title: title)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+
+    result.sort { |x, y|
         xprio = (x.title == title)
         yprio = (y.title == title)
         if xprio == yprio
@@ -453,8 +489,16 @@ def find_media(title)
 end
 
 def found_media(file, _)
+    log(LOG_DEBUG, "Function: found_media(#{file.inspect})")
+
+    log(LOG_DEBUG, "MPD request: addid(#{file.inspect}")
     id = $mpd.addid(file)
-    $mpd.move({id: id}, -1) unless $mpd.stopped?
+    log(LOG_DEBUG, " -> #{id.inspect}")
+    unless $mpd.stopped?
+        log(LOG_DEBUG, "MPD request: move({id: #{id}}, -1)")
+        $mpd.move({id: id}, -1)
+    end
+    log(LOG_DEBUG, "MPD request: play({id: #{id}})")
     $mpd.play({id: id})
 end
 
@@ -462,7 +506,12 @@ def find_in_playlist(title)
     title.remove_spaced_prefix!('play')
     title.remove_spaced_prefix!('jump to')
 
-    $mpd.queue_where(title: title).sort { |x, y|
+    log(LOG_DEBUG, "Function: find_in_playlist(#{title.inspect})")
+
+    log(LOG_DEBUG, "MPD request: where_queue(title: #{title.inspect})")
+    result = $mpd.queue_where(title: title)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.sort { |x, y|
         xprio = (x.title == title)
         yprio = (y.title == title)
         if xprio == yprio
@@ -490,6 +539,9 @@ def find_in_playlist(title)
 end
 
 def found_in_playlist(id, _)
+    log(LOG_DEBUG, "Function: found_in_playlist(#{id.inspect})")
+
+    log(LOG_DEBUG, "MPD request: play({id: #{id}})")
     $mpd.play({id: id.to_i})
 end
 
@@ -498,7 +550,12 @@ def find_queue(title)
         return []
     end
 
-    $mpd.where(title: title).sort { |x, y|
+    log(LOG_DEBUG, "Function: find_queue(#{title.inspect})")
+
+    log(LOG_DEBUG, "MPD request: where(title: #{title.inspect})")
+    result = $mpd.where(title: title)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.sort { |x, y|
         xprio = (x.title == title)
         yprio = (y.title == title)
         if xprio == yprio
@@ -526,8 +583,16 @@ def find_queue(title)
 end
 
 def do_queue(file, _)
+    log(LOG_DEBUG, "Function: do_queue(#{file.inspect})")
+
+    log(LOG_DEBUG, "MPD request: addid(#{file.inspect}")
     id = $mpd.addid(file)
-    $mpd.play({id: id}) if $mpd.stopped?
+    log(LOG_DEBUG, " -> #{id.inspect}")
+
+    if $mpd.stopped?
+        log(LOG_DEBUG, "MPD request: play({id: #{id}})")
+        $mpd.play({id: id})
+    end
 end
 
 def find_queue_album(album)
@@ -536,8 +601,13 @@ def find_queue_album(album)
     end
     album.remove_spaced_prefix!('album')
 
+    log(LOG_DEBUG, "Function: find_queue_album(#{album.inspect})")
+
     result_hash = {}
-    $mpd.where(album: album).each { |result|
+    log(LOG_DEBUG, "MPD request: where(album: #{album.inspect})")
+    result = $mpd.where(album: album)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.each { |result|
         artist = result.albumartist ? result.albumartist : result.artist
         result_hash[result.album] = artist
     }
@@ -551,7 +621,12 @@ def find_queue_album(album)
 end
 
 def do_queue_album(album, _)
-    ids = $mpd.where({album: album}, {strict: true}).sort { |x, y|
+    log(LOG_DEBUG, "Function: do_queue_album(#{album.inspect})")
+
+    log(LOG_DEBUG, "MPD request: where(album: #{album.inspect}, {strict: true})")
+    result = $mpd.where({album: album}, {strict: true})
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    ids = result.sort { |x, y|
         if x.track && y.track
             x.track <=> y.track
         elsif x.track
@@ -562,9 +637,14 @@ def do_queue_album(album, _)
             0
         end
     }.map { |song|
+        log(LOG_DEBUG, "MPD request: addid(#{song})")
         $mpd.addid(song)
     }
-    $mpd.play({id: ids[0]}) if $mpd.stopped? && ids[0]
+
+    if $mpd.stopped? && ids[0]
+        log(LOG_DEBUG, "MPD request: play({id: #{ids[0]}})")
+        $mpd.play({id: ids[0]})
+    end
 end
 
 def lookup_artist_random_song(artist)
@@ -573,8 +653,13 @@ def lookup_artist_random_song(artist)
         return []
     end
 
+    log(LOG_DEBUG, "Function: lookup_artist_random_song(#{artist.inspect})")
+
     grouped = {}
-    $mpd.where(artist: artist).each { |result|
+    log(LOG_DEBUG, "MPD request: where(artist: #{artist.inspect})")
+    result = $mpd.where(artist: artist)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.each { |result|
         grouped[result.artist] = [] unless grouped[result.artist]
         grouped[result.artist] << result
     }
@@ -592,8 +677,13 @@ def lookup_album_random_song(album)
         return []
     end
 
+    log(LOG_DEBUG, "Function: lookup_album_random_song(#{album.inspect})")
+
     grouped = {}
-    $mpd.where(album: album).each { |result|
+    log(LOG_DEBUG, "MPD request: where(album: #{album.inspect})")
+    result = $mpd.where(album: album)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.each { |result|
         grouped[result.album] = [] unless grouped[result.album]
         grouped[result.album] << result
     }
@@ -621,15 +711,29 @@ ACTIONS = [PLAY, PAUSE, RESUME, PREV, PREVIOUS, NEXT,
 
 
 class DBusInterface < DBus::Object
+    def initialize(path)
+        @debug_id = 0
+        super(path)
+    end
+
     dbus_interface 'org.kde.krunner1' do
         dbus_method :Actions, 'in msg:v, out return:a(sss)' do |msg|
-            log(LOG_DEBUG, ':Actions method called:')
-            log(LOG_DEBUG, msg.inspect)
+            debug_id = @debug_id
+            @debug_id += 1
+
+            log(LOG_DEBUG, "D-Bus :Actions[#{debug_id}](#{msg.inspect})")
+
             #return [ACTIONS.map { |action| [action[:action], action[:description], action[:icon]] }]
+            log(LOG_DEBUG, "D-Bus :Actions[#{debug_id}] -> [[]]")
             return [[]]
         end
 
         dbus_method :Match, 'in query:s, out return:a(sssida{sv})' do |query|
+            debug_id = @debug_id
+            @debug_id += 1
+
+            log(LOG_DEBUG, "D-Bus :Match[#{debug_id}](#{query.inspect})")
+
             begin
                 result = []
                 ACTIONS.each do |action|
@@ -642,27 +746,45 @@ class DBusInterface < DBus::Object
                         result += send(action[:match], query.dup)
                     end
                 end
+
+                log(LOG_DEBUG, "D-Bus :Match[#{debug_id}] -> [#{result.inspect}]")
                 return [result]
             rescue Interrupt
                 throw
             rescue Exception => e
                 log(LOG_ERROR, 'Exception while matching: ' + e.inspect)
                 log(LOG_ERROR, e.backtrace * $/)
+                log(LOG_DEBUG, "D-Bus :Match[#{debug_id}] -> [[]]")
                 return [[]]
             end
         end
 
         dbus_method :Run, 'in match:s, in signature:s' do |match, signature|
-            ACTIONS.each do |action|
-                if match == action[:action] && action[:execute]
-                    send(action[:execute], signature.dup)
-                    return
+            debug_id = @debug_id
+            @debug_id += 1
+
+            log(LOG_DEBUG, "D-Bus :Run[#{debug_id}](#{match.inspect}, #{signature.inspect})")
+
+            begin
+                ACTIONS.each do |action|
+                    if match == action[:action] && action[:execute]
+                        send(action[:execute], signature.dup)
+                        return
+                    end
+                    if action[:action_prefix] && match.start_with?(action[:action_prefix]) && action[:execute]
+                        send(action[:execute], match[action[:action_prefix].length..-1], signature.dup)
+                        return
+                    end
                 end
-                if action[:action_prefix] && match.start_with?(action[:action_prefix]) && action[:execute]
-                    send(action[:execute], match[action[:action_prefix].length..-1], signature.dup)
-                    return
-                end
+            rescue Interrupt
+                throw
+            rescue Exception => e
+                log(LOG_ERROR, 'Exception while executing: ' + e.inspect)
+                log(LOG_ERROR, e.backtrace * $/)
             end
+
+            log(LOG_DEBUG, "D-Bus :Run[#{debug_id}] -> nil")
+            return nil
         end
     end
 end
@@ -679,6 +801,8 @@ service = dbus.request_service('moe.xanclic.krunner-mpd')
 
 obj = DBusInterface.new('/krunner')
 service.export(obj)
+
+log(LOG_INFO, 'D-Bus service exported, entering main loop')
 
 dbus_loop = DBus::Main.new
 dbus_loop << dbus
