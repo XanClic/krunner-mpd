@@ -50,15 +50,17 @@ LOG_LEVEL_STRING = {
 }
 
 def log(log_level, message)
+    if log_level < $log_level
+        return
+    end
+
     time = Time.now.inspect
     lines = message.split($/).map { |line|
         "[#{time}] #{LOG_LEVEL_STRING[log_level]}: #{line}"
     }
 
-    if log_level >= $log_level
-        $log_file.puts(lines * $/)
-        $log_file.flush
-    end
+    $log_file.puts(lines * $/)
+    $log_file.flush
 end
 
 def die(message)
