@@ -57,6 +57,7 @@ def log(log_level, message)
 
     if log_level >= $log_level
         $log_file.puts(lines * $/)
+        $log_file.flush
     end
 end
 
