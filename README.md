@@ -46,6 +46,8 @@ Short feature list
   - `queue album` queues whole albums
 - `anything by` gives you a random song by some artist, `anything on` gives you
   a random song from a random album
+- `queue everything by` queues everything by some artist, sorted (in ascending
+  order) by date, album title, and track number
 
 Oh, and by the way, even if you’re not on an English system, the commands are
 still the same.  That’s because I personally always hate guessing whatever the

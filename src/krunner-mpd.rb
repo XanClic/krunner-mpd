@@ -410,6 +410,14 @@ RANDOM_BY_ALBUM = {
     execute: :found_media,
 }
 
+QUEUE_EVERYTHING_BY_ARTIST = {
+    cmd: nil,
+    description: I18n.t('queue_everything_by_artist_desc'),
+    action_prefix: '!qear ',
+    match: :lookup_queue_artist_everything,
+    execute: :do_queue_artist_everything,
+}
+
 
 # --------------------------------------------------------------------
 # Implementation of the above actions
@@ -700,6 +708,68 @@ def lookup_album_random_song(album)
     }[0..9]
 end
 
+def lookup_queue_artist_everything(artist)
+    if !artist.remove_spaced_prefix!('queue')
+        return []
+    end
+
+    if !artist.remove_spaced_prefix!('everything by') && !artist.remove_spaced_prefix!('everything from')
+        return []
+    end
+
+    log(LOG_DEBUG, "Function: lookup_queue_artist_everything(#{artist.inspect})")
+
+    artists = {}
+    log(LOG_DEBUG, "MPD request: where(artist: #{artist.inspect})")
+    result = $mpd.where(artist: artist)
+    log(LOG_DEBUG, " -> #{result.inspect}")
+    result.each { |result|
+        artists[result.artist] = true
+    }
+
+    artists.keys.sort.map { |key|
+        prob = (key == artist) ? 1.0 : 0.9
+        [QUEUE_EVERYTHING_BY_ARTIST[:action_prefix] + key,
+         QUEUE_EVERYTHING_BY_ARTIST[:description].sub('\s', key),
+         'media-playback-start',
+         MATCH_COMPLETION,
+         prob,
+         {}]
+    }[0..9]
+end
+
+def do_queue_artist_everything(artist, _)
+    log(LOG_DEBUG, "Function: do_queue_artist_everything(#{artist.inspect})")
+
+    log(LOG_DEBUG, "MPD request: where(artist: #{artist.inspect}, {strict: true})")
+    result = $mpd.where({artist: artist}, {strict: true})
+    log(LOG_DEBUG, " -> #{result.inspect}")
+
+    ids = result.sort { |x, y|
+        # Queue songs without date last
+        xdate = x.date ? x.date : 2**63 - 1
+        ydate = y.date ? y.date : 2**63 - 1
+
+        # Queue songs without album name last
+        xalbum = x.album ? x.album : "\u{10ffff}"
+        yalbum = y.album ? y.album : "\u{10ffff}"
+
+        # Queue songs without track index last
+        xtrack = x.track ? x.track : 2*63 - 1
+        ytrack = y.track ? y.track : 2*63 - 1
+
+        [xdate, xalbum, xtrack] <=> [ydate, yalbum, ytrack]
+    }.map { |song|
+        log(LOG_DEBUG, "MPD request: addid(#{song})")
+        $mpd.addid(song)
+    }
+
+    if $mpd.stopped? && ids[0]
+        log(LOG_DEBUG, "MPD request: play({id: #{ids[9]}))")
+        $mpd.play({id: ids[0]})
+    end
+end
+
 
 # --------------------------------------------------------------------
 # End of the action implementation: List of all actions
@@ -707,7 +777,8 @@ end
 
 
 ACTIONS = [PLAY, PAUSE, RESUME, PREV, PREVIOUS, NEXT,
-           FIND_IN_PLAYLIST, FIND_MEDIA, QUEUE, QUEUE_ALBUM, RANDOM_BY_ARTIST, RANDOM_BY_ALBUM]
+           FIND_IN_PLAYLIST, FIND_MEDIA, QUEUE, QUEUE_ALBUM,
+           RANDOM_BY_ARTIST, RANDOM_BY_ALBUM, QUEUE_EVERYTHING_BY_ARTIST]
 
 
 # --------------------------------------------------------------------

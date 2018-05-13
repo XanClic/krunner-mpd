@@ -11,3 +11,4 @@ en:
     random_by_artist_desc: 'Play anything by \s'
     random_by_album_desc: 'Play anything on \s'
     unknown_artist: 'Unknown artist'
+    queue_everything_by_artist_desc: 'Queue everything by \s'

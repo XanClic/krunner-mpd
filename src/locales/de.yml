@@ -11,3 +11,4 @@ de:
     random_by_artist_desc: 'Spiele irgendwas von \s'
     random_by_album_desc: 'Spiele irgendwas auf \s'
     unknown_artist: 'Unbekannter Künstler'
+    queue_everything_by_artist_desc: 'Hänge alles von \s an'
